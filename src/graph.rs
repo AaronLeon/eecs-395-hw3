@@ -1,52 +1,64 @@
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::Hash;
 
 #[derive(Hash, PartialEq, Eq, Clone)]
-pub struct Node<T> where T: Hash + PartialEq + Eq {
-    value: T,
-    neighbors: Vec<Node<T>>,
+pub struct Node {
+    value: String,
+    neighbors: Vec<Node>,
 }
 
-pub struct Graph<T> where T: Hash + PartialEq + Eq {
-    nodes: HashSet<Node<T>>
+pub struct Graph {
+    nodes: HashMap<String, Node>
 }
 
 
-impl<T> Graph<T> where T: Hash + PartialEq + Eq + Clone {
-    fn new() -> Graph<T> {
-        Graph {
-            nodes: HashSet::new()
-        }
+impl Graph {
+    pub fn new() -> Graph {
+        let mut graph = Graph {
+            nodes: HashMap::new()
+        };
+        graph
     }
 
-    fn add(&mut self, mut new_node:Node<T>) {
-        if !self.nodes.contains(&new_node){
-            self.nodes.insert(new_node);
+    pub fn add(&mut self, value:String) {
+        let v = value.clone();
+        let new_neighbors = Vec::new();
+        let new_node:Node = Node::new(value, new_neighbors);
+        self.nodes.insert(v, new_node);
+    } 
+
+    pub fn get(&mut self, value:String) -> &mut Node {
+        match self.nodes.get_mut(&value) {
+            Some(node) => return node,
+            None => panic!("no node found!"),
         }
-    }  
+    }
 }
 
-impl<T> Node<T> where T: Hash + PartialEq  + Eq + Clone {
-    fn new(value:T, neighbors:Vec<Node<T>>) -> Node<T> {
-        Node {
+impl Node {
+    pub fn new(value:String, neighbors:Vec<Node>) -> Node {
+        let mut node = Node {
             value: value,
             neighbors: neighbors,
-        }
+        };
+        node
     }
 
-    fn add_neighbor(&mut self, mut new_neighbor:Node<T>) {
-        let current_node: Node<T> = self.clone();
-        if !&self.neighbors.contains(&new_neighbor) {
-            // Add the node to the current node's edge list
-            &self.neighbors.push(new_neighbor); 
-            // Then we should add the other side of the edge, by adding the current node in its neighbor's edge list
-            // We have to check if the neighbor exists in the graph, if it does then we add data to its edge list
-            // otherwise we add a node to the graph. 
-            // Graph::add(&new_neighbor);
+    pub fn add_neighbor(&mut self, new_neighbor: &mut Node) {
+        let nn = new_neighbor.clone();
+        let current = self.clone();
 
-            if !new_neighbor.neighbors.contains(&self) {
-                new_neighbor.neighbors.push(current_node);
-            }
+        // Add the node to the current node's edge list
+        if !&self.neighbors.contains(new_neighbor) {
+            &self.neighbors.push(nn); 
+        }
+        // Stringhen we should add the other side of the edge, by adding the current node in its neighbor's edge list
+        // We have to check if the neighbor exists in the graph, if it does then we add data to its edge list
+        // otherwise we add a node to the graph. 
+        // Graph::add(&new_neighbor);
+        if new_neighbor.neighbors.contains(self) {
+            new_neighbor.neighbors.push(current);
         }
     }
 }
