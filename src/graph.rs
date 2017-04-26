@@ -36,29 +36,31 @@ impl Graph {
     }
 
     pub fn get_path(&self, a:&String, b:&String) -> Option<Vec<String>> {
-        let mut visited = HashSet::new();
-        let mut path = Vec::new();
-        let res = self.get_path_helper(a, b, &mut visited, &mut path);
+        let visited = HashSet::new();
+        let path = Vec::new();
+        let res = self.get_path_helper(a, b, &visited, &path);
         println!("FOUND: {:?}", res);
         res
         //self.get_path_helper(a, b, &mut visited, &mut path)
     }
 
-    fn get_path_helper(&self, a:&String, b:&String, visited:&mut HashSet<String>, path:&mut Vec<String>) -> Option<Vec<String>> {
-        visited.insert(a.to_owned());
-        if a == b {
-            println!("FOUND: {:?}", visited);
-            path.push(b.to_owned());
-            return Some(path.clone());
-        }
+    fn get_path_helper(&self, a:&String, b:&String, visited:&HashSet<String>, path:&Vec<String>) -> Option<Vec<String>> {
+        let mut v = visited.clone();
+        let mut p = path.clone();
+        v.insert(a.to_owned());
+        p.push(a.to_owned());
         println!("{}", a);
-        println!("{:?}", visited);
+        println!("{:?}", v);
         if let Some(neighbors) = self.nodes.get(a) {
             for neighbor in neighbors {
+                if *&neighbor == *&b {
+                    println!("EQ: {}, {}", a, b);
+                    println!("FOUND: {:?}", v);
+                    return Some(p.clone());
+                }
                 if !visited.contains(neighbor) {
-                    path.push(neighbor.to_owned());
-                    if let Some(res) = self.get_path_helper(neighbor, b, visited, path) {
-                        return Some(path.clone());
+                    if let Some(res) = self.get_path_helper(neighbor, b, &v, &p) {
+                        return Some(p.clone());
                     }
                 }
             }
@@ -130,7 +132,7 @@ mod graph_tests {
 
         let expected1 = vec![a.to_owned(), b.to_owned(), d.to_owned()];
         let expected2 = vec![a.to_owned(), d.to_owned()];
-        let path = g.get_path(&a, &c).unwrap();
+        let path = g.get_path(&a, &b).unwrap();
         print!("{:?}", path);
         assert!(path == expected1 || path == expected2);
     }
