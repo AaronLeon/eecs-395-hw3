@@ -51,16 +51,18 @@ impl Graph {
         p.push(a.to_owned());
         println!("{}", a);
         println!("{:?}", v);
+        println!("{:?}", p);
+        if *&a == *&b {
+            println!("EQ: {}, {}", a, b);
+            println!("FOUND: {:?}", v);
+            println!("FOUND: {:?}", p);
+            return Some(p.clone());
+        }
         if let Some(neighbors) = self.nodes.get(a) {
             for neighbor in neighbors {
-                if *&neighbor == *&b {
-                    println!("EQ: {}, {}", a, b);
-                    println!("FOUND: {:?}", v);
-                    return Some(p.clone());
-                }
                 if !visited.contains(neighbor) {
                     if let Some(res) = self.get_path_helper(neighbor, b, &v, &p) {
-                        return Some(p.clone());
+                        return Some(res);
                     }
                 }
             }
@@ -130,8 +132,8 @@ mod graph_tests {
         g.add_edge(&d, &b);
         g.add_edge(&e, &d);
 
-        let expected1 = vec![a.to_owned(), b.to_owned(), d.to_owned()];
-        let expected2 = vec![a.to_owned(), d.to_owned()];
+        let expected1 = vec![a.to_owned(), d.to_owned(), b.to_owned()];
+        let expected2 = vec![a.to_owned(), b.to_owned()];
         let path = g.get_path(&a, &b).unwrap();
         print!("{:?}", path);
         assert!(path == expected1 || path == expected2);
@@ -164,16 +166,69 @@ mod graph_tests {
 
     #[test]
     fn get_path_of_linear_path_test() {
+        let mut g = Graph::new();
+        let a = "a".to_string();
+        let b = "b".to_string();
+        let c = "c".to_string();
+        let d = "d".to_string();
+        let e = "e".to_string();
+        g.add_node(&a);
+        g.add_node(&b);
+        g.add_node(&c);
+        g.add_node(&d);
+        g.add_node(&e);
+        g.add_edge(&a, &b);
+        g.add_edge(&b, &c);
+        g.add_edge(&c, &d);
+        g.add_edge(&d, &e);
 
+        let expected = vec![a.to_owned(), b.to_owned(), c.to_owned(), d.to_owned(), e.to_owned()];
+        assert!(g.get_path(&a, &e).unwrap() == expected);
     }
 
     #[test]
     fn get_path_of_same_node_test() {
+        let mut g = Graph::new();
+        let a = "a".to_string();
+        let b = "b".to_string();
+        let c = "c".to_string();
+        let d = "d".to_string();
+        let e = "e".to_string();
+        g.add_node(&a);
+        g.add_node(&b);
+        g.add_node(&c);
+        g.add_node(&d);
+        g.add_node(&e);
+        g.add_edge(&a, &b);
+        g.add_edge(&a, &d);
+        g.add_edge(&c, &e);
+        g.add_edge(&d, &b);
+        g.add_edge(&e, &d);
+
+        let expected = vec![a.to_owned()];
+        let path = g.get_path(&a, &a).unwrap();
+        assert!(path == expected);
 
     }
 
     #[test]
     fn get_path_when_no_path_exists_test() {
+        let mut g = Graph::new();
+        let a = "a".to_string();
+        let b = "b".to_string();
+        let c = "c".to_string();
+        let d = "d".to_string();
+        let e = "e".to_string();
+        g.add_node(&a);
+        g.add_node(&b);
+        g.add_node(&c);
+        g.add_node(&d);
+        g.add_node(&e);
+        g.add_edge(&a, &b);
+        g.add_edge(&a, &d);
+        g.add_edge(&d, &b);
+        g.add_edge(&e, &d);
 
+        assert!(g.get_path(&a, &c).is_none());
     }
 }
