@@ -1,36 +1,30 @@
 use std::env;
 use std::fs::File;
-use std::io::{stdin, Read};
+use std::io::{stdin, Read, stdout, Write};
 
 mod graph;
 use graph::Graph;
 
 fn main() {
     let nodes = read_graph_file();
-    //let g = generate_graph(nodes);
-    let mut g = Graph::new();
-    let a = "a".to_string();
-    let b = "b".to_string();
-    let c = "c".to_string();
-    let d = "d".to_string();
-    let e = "e".to_string();
-    g.add_node(&a);
-    g.add_node(&b);
-    g.add_node(&c);
-    g.add_node(&d);
-    g.add_node(&e);
-    g.add_edge(&a, &b);
-    g.add_edge(&a, &d);
-    g.add_edge(&c, &e);
-    g.add_edge(&d, &b);
-    g.add_edge(&e, &d);
+    let g = generate_graph(nodes);
+    print_paths(stdout(), read_input(stdin()), &g);
+}
 
-    let expected1 = vec![a.to_owned(), b.to_owned(), d.to_owned()];
-    let expected2 = vec![a.to_owned(), d.to_owned()];
-    let path = g.get_path(&a, &c);
-    match path {
-        Some(p) => print!("{:?}", p),
-        None => print!("NONE!!"),
+fn print_paths<W: Write>(mut writer:W, queries:Vec<String>, graph:&Graph) {
+    for query in queries {
+        let q:Vec<String> = query.split(' ')
+            .map(|c| c.to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+
+        writeln!(writer, "-> {}", query).ok();
+        if let Some(p) = graph.get_path(&q[0], &q[1]) {
+            let res = p.join(" ");
+            write!(writer, "{}\n", res).ok();
+        } else {
+            writeln!(writer, "No such path exists").ok();
+        }
     }
 }
 
@@ -53,8 +47,9 @@ fn read_input<R: Read>(mut reader: R) -> Vec<String> {
     let mut buffer = String::new();
     reader.read_to_string(&mut buffer).ok();
 
-    let result:Vec<String> = buffer.split_whitespace()
+    let result:Vec<String> = buffer.split('\n')
         .map(|s| s.to_string())
+        .filter(|s| !s.is_empty())
         .collect();
     result
 }
@@ -78,8 +73,8 @@ fn read_graph_file() -> Vec<Vec<String>> {
     result
 }
 
-#[cfg(test)]
-mod path_finder_test {
-    use super::{read_graph_file, generate_graph};
+//#[cfg(test)]
+//mod path_finder_test {
+    //use super::{read_graph_file, generate_graph};
 
-}
+//}

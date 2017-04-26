@@ -28,20 +28,15 @@ impl Graph {
         self.nodes.get_mut(b).unwrap().insert(a.to_owned());
     }
 
-    pub fn get_neighbors(&self, value:&String) -> &HashSet<String> {
-        match self.nodes.get(value) {
-            Some(neighbors) => return neighbors,
-            None => panic!("no node found!"),
-        }
+    pub fn get_neighbors(&self, value:&String) -> Option<&HashSet<String>> {
+        self.nodes.get(value)
     }
 
     pub fn get_path(&self, a:&String, b:&String) -> Option<Vec<String>> {
         let visited = HashSet::new();
         let path = Vec::new();
         let res = self.get_path_helper(a, b, &visited, &path);
-        println!("FOUND: {:?}", res);
         res
-        //self.get_path_helper(a, b, &mut visited, &mut path)
     }
 
     fn get_path_helper(&self, a:&String, b:&String, visited:&HashSet<String>, path:&Vec<String>) -> Option<Vec<String>> {
@@ -49,16 +44,10 @@ impl Graph {
         let mut p = path.clone();
         v.insert(a.to_owned());
         p.push(a.to_owned());
-        println!("{}", a);
-        println!("{:?}", v);
-        println!("{:?}", p);
         if *&a == *&b {
-            println!("EQ: {}, {}", a, b);
-            println!("FOUND: {:?}", v);
-            println!("FOUND: {:?}", p);
             return Some(p.clone());
         }
-        if let Some(neighbors) = self.nodes.get(a) {
+        if let Some(neighbors) = self.get_neighbors(a) {
             for neighbor in neighbors {
                 if !visited.contains(neighbor) {
                     if let Some(res) = self.get_path_helper(neighbor, b, &v, &p) {
@@ -74,8 +63,6 @@ impl Graph {
 #[cfg(test)]
 mod graph_tests {
     use super::Graph;
-    use std::io::Cursor;
-    use std::collections::{HashMap, HashSet};
 
     #[test]
     fn new_graph_is_empty_test() {
@@ -99,7 +86,7 @@ mod graph_tests {
         let neighbor = "b".to_string();
         g.add_node(&value);
         g.nodes.get_mut(&value).unwrap().insert((&neighbor).to_owned());
-        assert!(g.get_neighbors(&value).contains(&neighbor));
+        assert!(g.get_neighbors(&value).unwrap().contains(&neighbor));
     }
 
     #[test]
@@ -109,8 +96,8 @@ mod graph_tests {
         let b = "b".to_string();
         g.add_node(&a);
         g.add_edge(&a, &b);
-        assert!(g.get_neighbors(&a).contains(&b));
-        assert!(g.get_neighbors(&b).contains(&a));
+        assert!(g.get_neighbors(&a).unwrap().contains(&b));
+        assert!(g.get_neighbors(&b).unwrap().contains(&a));
     }
 
     #[test]
@@ -135,7 +122,6 @@ mod graph_tests {
         let expected1 = vec![a.to_owned(), d.to_owned(), b.to_owned()];
         let expected2 = vec![a.to_owned(), b.to_owned()];
         let path = g.get_path(&a, &b).unwrap();
-        print!("{:?}", path);
         assert!(path == expected1 || path == expected2);
     }
 
