@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::hash::Hash;
 
 #[derive(Hash, PartialEq, Eq, Clone)]
-struct Node<T> where T: Hash + PartialEq + Eq {
+pub struct Node<T> where T: Hash + PartialEq + Eq {
     value: T,
     neighbors: Vec<Node<T>>,
 }
