@@ -28,37 +28,30 @@ impl Graph {
         self.nodes.get_mut(b).unwrap().insert(a.to_owned());
     }
 
-    pub fn get_neighbors(&self, value:&String) -> &HashSet<String> {
-        match self.nodes.get(value) {
-            Some(neighbors) => return neighbors,
-            None => panic!("no node found!"),
-        }
+    pub fn get_neighbors(&self, value:&String) -> Option<&HashSet<String>> {
+        self.nodes.get(value)
     }
 
     pub fn get_path(&self, a:&String, b:&String) -> Option<Vec<String>> {
-        let mut visited = HashSet::new();
-        let mut path = Vec::new();
-        let res = self.get_path_helper(a, b, &mut visited, &mut path);
-        println!("FOUND: {:?}", res);
+        let visited = HashSet::new();
+        let path = Vec::new();
+        let res = self.get_path_helper(a, b, &visited, &path);
         res
-        //self.get_path_helper(a, b, &mut visited, &mut path)
     }
 
-    fn get_path_helper(&self, a:&String, b:&String, visited:&mut HashSet<String>, path:&mut Vec<String>) -> Option<Vec<String>> {
-        visited.insert(a.to_owned());
-        if a == b {
-            println!("FOUND: {:?}", visited);
-            path.push(b.to_owned());
-            return Some(path.clone());
+    fn get_path_helper(&self, a:&String, b:&String, visited:&HashSet<String>, path:&Vec<String>) -> Option<Vec<String>> {
+        let mut v = visited.clone();
+        let mut p = path.clone();
+        v.insert(a.to_owned());
+        p.push(a.to_owned());
+        if *&a == *&b {
+            return Some(p.clone());
         }
-        println!("{}", a);
-        println!("{:?}", visited);
-        if let Some(neighbors) = self.nodes.get(a) {
+        if let Some(neighbors) = self.get_neighbors(a) {
             for neighbor in neighbors {
                 if !visited.contains(neighbor) {
-                    path.push(neighbor.to_owned());
-                    if let Some(res) = self.get_path_helper(neighbor, b, visited, path) {
-                        return Some(path.clone());
+                    if let Some(res) = self.get_path_helper(neighbor, b, &v, &p) {
+                        return Some(res);
                     }
                 }
             }
@@ -70,8 +63,6 @@ impl Graph {
 #[cfg(test)]
 mod graph_tests {
     use super::Graph;
-    use std::io::Cursor;
-    use std::collections::{HashMap, HashSet};
 
     #[test]
     fn new_graph_is_empty_test() {
@@ -95,7 +86,7 @@ mod graph_tests {
         let neighbor = "b".to_string();
         g.add_node(&value);
         g.nodes.get_mut(&value).unwrap().insert((&neighbor).to_owned());
-        assert!(g.get_neighbors(&value).contains(&neighbor));
+        assert!(g.get_neighbors(&value).unwrap().contains(&neighbor));
     }
 
     #[test]
@@ -105,8 +96,8 @@ mod graph_tests {
         let b = "b".to_string();
         g.add_node(&a);
         g.add_edge(&a, &b);
-        assert!(g.get_neighbors(&a).contains(&b));
-        assert!(g.get_neighbors(&b).contains(&a));
+        assert!(g.get_neighbors(&a).unwrap().contains(&b));
+        assert!(g.get_neighbors(&b).unwrap().contains(&a));
     }
 
     #[test]
@@ -128,10 +119,9 @@ mod graph_tests {
         g.add_edge(&d, &b);
         g.add_edge(&e, &d);
 
-        let expected1 = vec![a.to_owned(), b.to_owned(), d.to_owned()];
-        let expected2 = vec![a.to_owned(), d.to_owned()];
-        let path = g.get_path(&a, &c).unwrap();
-        print!("{:?}", path);
+        let expected1 = vec![a.to_owned(), d.to_owned(), b.to_owned()];
+        let expected2 = vec![a.to_owned(), b.to_owned()];
+        let path = g.get_path(&a, &b).unwrap();
         assert!(path == expected1 || path == expected2);
     }
 
@@ -162,16 +152,69 @@ mod graph_tests {
 
     #[test]
     fn get_path_of_linear_path_test() {
+        let mut g = Graph::new();
+        let a = "a".to_string();
+        let b = "b".to_string();
+        let c = "c".to_string();
+        let d = "d".to_string();
+        let e = "e".to_string();
+        g.add_node(&a);
+        g.add_node(&b);
+        g.add_node(&c);
+        g.add_node(&d);
+        g.add_node(&e);
+        g.add_edge(&a, &b);
+        g.add_edge(&b, &c);
+        g.add_edge(&c, &d);
+        g.add_edge(&d, &e);
 
+        let expected = vec![a.to_owned(), b.to_owned(), c.to_owned(), d.to_owned(), e.to_owned()];
+        assert!(g.get_path(&a, &e).unwrap() == expected);
     }
 
     #[test]
     fn get_path_of_same_node_test() {
+        let mut g = Graph::new();
+        let a = "a".to_string();
+        let b = "b".to_string();
+        let c = "c".to_string();
+        let d = "d".to_string();
+        let e = "e".to_string();
+        g.add_node(&a);
+        g.add_node(&b);
+        g.add_node(&c);
+        g.add_node(&d);
+        g.add_node(&e);
+        g.add_edge(&a, &b);
+        g.add_edge(&a, &d);
+        g.add_edge(&c, &e);
+        g.add_edge(&d, &b);
+        g.add_edge(&e, &d);
+
+        let expected = vec![a.to_owned()];
+        let path = g.get_path(&a, &a).unwrap();
+        assert!(path == expected);
 
     }
 
     #[test]
     fn get_path_when_no_path_exists_test() {
+        let mut g = Graph::new();
+        let a = "a".to_string();
+        let b = "b".to_string();
+        let c = "c".to_string();
+        let d = "d".to_string();
+        let e = "e".to_string();
+        g.add_node(&a);
+        g.add_node(&b);
+        g.add_node(&c);
+        g.add_node(&d);
+        g.add_node(&e);
+        g.add_edge(&a, &b);
+        g.add_edge(&a, &d);
+        g.add_edge(&d, &b);
+        g.add_edge(&e, &d);
 
+        assert!(g.get_path(&a, &c).is_none());
     }
 }
